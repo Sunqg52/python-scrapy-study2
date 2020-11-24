@@ -1,0 +1,26 @@
+from django.db import models
+
+# Create your models here.
+class Subject(models.Model):
+	"""学科"""
+	no = models.IntegerField(primary_key=True, verbose_name='编号')
+	name = models.CharField(max_length=20, verbose_name='名称')
+	intro = models.CharField(max_length=511, default='', verbose_name='介绍')
+	create_date = models.DateField(null=True, verbose_name='成立日期')
+	is_not = models.BooleanField(default=False, verbose_name='是否热门')
+
+	def __str__(self):
+		return self.name
+
+	class Meta:
+		db_table = 'tb_subject'
+		verbose_name = '学科'
+		verbose_name_plural = '学科'
+
+class Teacher(models.Model):
+	"""老师"""
+	no = models.IntegerField(primary_key=True, verbose_name='编号')
+	name = models.CharField(max_length=20, verbose_name='姓名')
+	good_count = models.IntegerField(default='', verbose_name='好评数')
+	bad_count = models.IntegerField(default='', verbose_name='差评数')
+	subject = models.ForeignKey(to=Subject, on_delete=models.PROTECT, db_column='sno', verbose_name='所属学科')
