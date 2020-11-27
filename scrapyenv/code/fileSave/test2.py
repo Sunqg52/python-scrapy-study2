@@ -1,11 +1,18 @@
 from urllib.parse import urlencode
-from bs4 import BeautifulSoup
+from urllib.request import urlretrieve
 import requests
-# import json
-# from urllib.request import ProxyHandler, build_opener
-# from dataChange import MyEncoder
+import re
+import os
+"""
+1. 根据链接获取json信息
+2. 根据返回的json信息提取出图片的objURL
+4. 对提取出的objURL解码转换
+4. 根据objURL下载图片
+"""
 
 def get_json():
+	"""根据链接获取json信息"""
+
 	baseUrl = 'https://image.baidu.com/search/index?'
 	headers = {
 		'Host':'image.baidu.com',
@@ -23,7 +30,7 @@ def get_json():
 		'ct': '201326592',
 		'is': '',
 		'fp': 'result',
-		'queryWord': '火影',
+		'queryWord': '火影',		# 关键字 可自行更改
 		'cl': '2',
 		'lm': '-1',
 		'ie': 'utf-8',
@@ -35,7 +42,7 @@ def get_json():
 		'hd': '',
 		'latest': '',
 		'copyright': '',
-		'word': '火影',
+		'word': '火影',		# 关键字 可自行更改
 		's': '',
 		'se':'' ,
 		'tab': '',
@@ -48,18 +55,11 @@ def get_json():
 		'fr': '',
 		'expermode': '',
 		'force': '',
-		'pn': 60,
-		'rn': '30',
+		'pn': '30',		# 本页图片数量 需要的可以自行修改
+		'rn': '30',			
 		'gsm': '3c',
 		'1606372009928': '',
 	}
-
-	# proxy = '27.43.187.21:9999'
-	# proxy_handler = ProxyHandler({
-	# 	'http':'http://' + proxy,
-	# 	'https': 'https://' + proxy
-	# 	})
-	# opener = build_opener(proxy_handler)
 
 	url = baseUrl + urlencode(params)
 	print(url)
@@ -71,27 +71,61 @@ def get_json():
 	except requests.ConnectionError as e:
 		print(e.args)
 
-def get_objUrl(json):
-	if json.get('data'):
+def get_objUrl(pageInfo):
+
+	if pageInfo.get('data'):
 		urls = []
-		for data in json.get('data'):
-			# print(data)
-			urls.append(data.get('objURL'))
-			return urls
+		data = pageInfo.get('data')
+		for info in data:
+			if info.get('objURL'):
+				url = info.get('objURL')
+				urls.append(url)
+				print(url)
+		return urls
 	else:
 		print('json获取失败')
 
+def  img_decode(url):
+    res = ''
+    c = ['_z2C$q', '_z&e3B', 'AzdH3F']
+    decode = {
+    	'w':'a', 'k':'b', 'v':'c', '1':'d', 'j':'e', 'u':'f', 
+    	'2':'g', 'i':'h', 't':'i', '3':'j', 'h':'k', 's':'l', 
+    	'4':'m', 'g':'n', '5':'o', 'r':'p', 'q':'q', '6':'r', 
+    	'f':'s', 'p':'t', '7':'u', 'e':'v', 'o':'w', '8':'1', 
+    	'd':'2', 'n':'3', '9':'4', 'c':'5', 'm':'6', '0':'7', 
+    	'b':'8', 'l':'9', 'a':'0', '_z2C$q':':', '_z&e3B':'.',
+    	 'AzdH3F':'/',
+    	}
+    if(url==None or 'http' in url):
+        return url
+    else:
+        j= url
+        for m in c:
+            j=j.replace(m,decode[m])
+        for char in j:
+            if re.match('^[a-w\d]+$',char):
+                char = decode[char]
+            res= res+char
+        return res
+
+def download_img(url, count):
+	try:
+		response = requests.get(url)
+		if response.status_code == 200:
+			urlretrieve(url,'img{}.jpg'.format(count))
+
+	except requests.ConnectionError as e:
+		print('保存失败！ Error: ', e.args)
+
+def main(urllist, count=0):
+	
+	for url in urlList:
+		url = img_decode(url)
+		download_img(url, count)
+		count += 1
+
 if __name__ == '__main__':
 	pageInfo = get_json()
-	print(type(pageInfo))
-	# pageInfo = str(pageInfo)
-	# if isinstance(pageInfo, bytes):
-	# 	pageInfo=str(pageInfo, encoding='utf-8')
-
-	# with open('pageInfo2.json', 'w') as f:
-	# 	json.dumps(pageInfo,indent=4)
-	
 	urlList = get_objUrl(pageInfo)
-	for url in urlList:
-		print(url)
-	# urlList = get_json()
+	main(urlList)

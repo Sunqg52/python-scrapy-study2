@@ -1,65 +1,24 @@
-from urllib.parse import urlencode
-from pyquery import PyQuery as pq
-import requests
-base_url = 'https://m.weibo.cn/api/container/getIndex?';
-headers = {
-	'Host': 'm.weibo.cn',
-	'Referer': 'https://m.weibo.cn/u/2830678474',
-	'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36',
-	'X-Requested-With': 'XMLHttpRequest'
-}
-
-def get_json(since_id=None):
-	params = {
-		'uid': '2830678474',
-		'luicode': '10000011',
-		'lfid': '1076032830678474',
-		'type': 'uid',
-		'value': '2830678474',
-		'containerid': '1076032830678474',
+import re
+url = 'ippr_z2C$qAzdH3FAzdH3Fv-ffs_z&e3B17tpwg2_z&e3Bv54AzdH3F7rs5w1fAzdH3Ftpj4AzdH3Fda8l8aAzdH3FamAzdH3Fda8l8aam8d9b8m_ystqs_z&e3Bpi74k_z&e3B9aa_a_z&e3B3r2'
+res = ''
+c = ['_z2C$q', '_z&e3B', 'AzdH3F']
+decode = {
+	'w':'a', 'k':'b', 'v':'c', '1':'d', 'j':'e', 'u':'f', 
+	'2':'g', 'i':'h', 't':'i', '3':'j', 'h':'k', 's':'l', 
+	'4':'m', 'g':'n', '5':'o', 'r':'p', 'q':'q', '6':'r', 
+	'f':'s', 'p':'t', '7':'u', 'e':'v', 'o':'w', '8':'1', 
+	'd':'2', 'n':'3', '9':'4', 'c':'5', 'm':'6', '0':'7', 
+	'b':'8', 'l':'9', 'a':'0', '_z2C$q':':', '_z&e3B':'.',
+	 'AzdH3F':'/',
 	}
-	if since_id != None:
-		params['since_id'] = since_id
-
-	url = base_url + urlencode(params)
-
-	try:
-		response = requests.get(url, headers=headers)
-		if response.status_code == 200:
-			return response.json()
-	except requests.ConnectionError as e:
-		print('Error', e.args)
-
-
-def get_sinceid(json):
-	items = json.get('data').get('cardlistInfo')
-	for since_id in items:
-		if since_id:
-			return items.get('since_id')
-
-def get_page(json):
-	if json:
-		items = json.get('data').get('cards')
-		dates = []
-		for item in items:
-			item = item.get('mblog')
-			weibo = {}
-			weibo['id'] = item.get('id')
-			weibo['text'] = pq(item.get('text')).text()
-			weibo['attitudes'] = item.get('attitudes_count')
-			weibo['comments'] = item.get('comments_count')
-			weibo['reposts'] = item.get('reposts_count')
-			# yield weibo			# 迭代器
-			dates.append(weibo)
-	return dates
-
-if __name__=='__main__':
-	json = get_json()	
-	print(type(json))
-	# results = get_page(json)
-	# for i in range(1,11):
-	# 	since_id = get_sinceid(json)
-	# 	json = get_json(since_id)
-	# 	results.append(get_page(json))
-	# 	for result in results:
-	# 		print(result)
+if(url==None or 'http' in url):
+    print(url)
+else:
+    j= url
+    for m in c:
+        j=j.replace(m,decode[m])
+    for char in j:
+        if re.match('^[a-w\d]+$',char):
+            char = decode[char]
+        res= res+char
+    print(res) 
